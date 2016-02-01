@@ -1,0 +1,91 @@
+grammar org.AtsLang with org.eclipse.xtext.common.Terminals
+// hidden(ML_COMMENT, SL_COMMENT, WS)
+
+generate atsLang "http://www.ats-lang.org"
+import "http://www.eclipse.org/emf/2002/Ecore" as ecore
+
+Model:
+	(equations+=(Comma|valline))*;
+
+valline returns Expression:
+			VAL SingleVal ({ValAnd.left=current} 'and' right=SingleVal)*;
+
+SingleVal: symbol=SYMBOL '=' expr=Expression;
+
+//funline:
+//	FUN SYMBOL paramblock EQ paramblock;
+
+//impline:
+//	IMPLEMENT UNDERSCORE EQ SYMBOL paramblock;
+
+Expression:
+	Comma;
+
+Comma returns Expression: AndOrEvaluation ({Comma.left=current} name=',' right=AndOrEvaluation)*;
+
+AndOrEvaluation returns Expression:
+	NotOperation (({AndAlso.left=current} 'andalso' | {OrElse.left=current} 'orelse') right=NotOperation)*;
+
+NotOperation returns Expression: ('not' Compare {Not.self=current}) | Compare;
+
+Compare returns Expression:
+	AddSub (({Gt.left=current} '<' | {Ge.left=current} '<=' | {Eq.left=current} '==' | {Le.left=current} '>=' |
+	{Lt.left=current} '>') right=AddSub)*;
+
+AddSub returns Expression:
+	MulDiv (({Plus.left=current} name='+' | {Minus.left=current} name='-') right=MulDiv)*;
+
+MulDiv returns Expression:
+	Factor (({Multiply.left=current} name='*' | {Division.left=current} name='/') right=Factor)*;
+
+Factor returns Expression:
+	boolean=BOOL | Integer | double=DBL_NUM | name=SYMBOL | string=STRING | character=CHARACTER | '(' Comma ')';
+
+Integer: name=INT_NUM;
+
+terminal fragment CHAR:
+	'\\' ('b' | 't' | 'n' | 'f' | 'r' | 'u' | '"' | "'" | '\\') | !('\\' | '"');
+
+terminal CHARACTER:
+	"'" CHAR "'";
+
+terminal STRING:
+	'"' CHAR* '"';
+
+terminal INT_NUM:
+	'~'? (('1'..'9') ('0'..'9')* | '0');
+
+terminal DBL_NUM:
+	'~'? (('1'..'9') ('0'..'9')* | '0') "." (('0'..'9')*)? ('E' '-'? ('1'..'9') ('0'..'9')*)?;
+
+terminal VAL:
+	"val";
+
+terminal FUN:
+	"fun";
+
+terminal BOOL returns ecore::EBoolean:
+	"true" | 'false';
+
+terminal IMPLEMENT:
+	"implement";
+
+terminal SYMBOL:
+	('a'..'z' | 'A'..'Z') ('a'..'z' | 'A'..'Z' | '0'..'9')* | '_';
+
+	//terminal OP: 'op' ;
+terminal SL_COMMENT:
+	'//' (!'//') !('\n' | '\r')* NL;
+
+terminal ML_COMMENT:
+	('(*'->'*)') | ('/*'->'*/') | ('////' (ANY_OTHER)*);
+
+terminal OP: "op" ('+' | '-' | '*' | '/');
+
+terminal NL: ('\r'? '\n');
+
+terminal WS:
+	(" " | "\t" | "\r" | "\n")+;
+
+terminal ANY_OTHER:
+	.;

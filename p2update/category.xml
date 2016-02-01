@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <feature id="jp.pizzafactory.atsdt.sdk" version="0.0.1.qualifier">
+      <category name="jp.pizzafactory.atsdt.category"/>
+   </feature>
+   <category-def name="jp.pizzafactory.atsdt.category" label="ATSDT">
+      <description>
+         ATS Development Tools
+      </description>
+   </category-def>
+</site>
